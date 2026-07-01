@@ -39,7 +39,7 @@ class WC_Notify_Frontend {
         if ( ! $product->is_in_stock() ) {
             $btn_text = get_option( 'wc_notify_btn_text', 'Уведомить о наличии' );
             return sprintf(
-                '<a href="#" class="button open-notify-form" data-product-id="%s">%s</a>',
+                '<a href="#" class="btn button catalog-notify-btn open-notify-form" data-product-id="%s">%s</a>',
                 esc_attr( $product->get_id() ),
                 esc_html( $btn_text )
             );
@@ -53,7 +53,7 @@ class WC_Notify_Frontend {
         
         $btn_text = get_option( 'wc_notify_btn_text', 'Уведомить о наличии' );
         echo sprintf(
-            '<a href="#" class="button open-notify-form" data-product-id="%s" style="margin-top:5px; display:block; text-align:center;">%s</a>',
+            '<a href="#" class="btn button catalog-notify-btn open-notify-form" data-product-id="%s" style="margin-top:5px; display:block; text-align:center;">%s</a>',
             esc_attr( $product->get_id() ),
             esc_html( $btn_text )
         );
