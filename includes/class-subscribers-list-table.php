@@ -34,10 +34,17 @@ class WC_Notify_Subscribers_List_Table extends WP_List_Table {
         ];
     }
 
+    public function column_email( $item ) {
+        $actions = [
+            'send_mail' => sprintf( '<a href="?page=%s&tab=subscribers&action=%s&subscriber=%s&_wpnonce=%s">Отправить email о наличии</a>', $_REQUEST['page'], 'send_mail', $item['id'], wp_create_nonce('send_mail_'.$item['id']) ),
+            'delete'    => sprintf( '<a href="?page=%s&tab=subscribers&action=%s&subscriber=%s&_wpnonce=%s" style="color:red;">Удалить</a>', $_REQUEST['page'], 'delete_sub', $item['id'], wp_create_nonce('delete_sub_'.$item['id']) ),
+        ];
+        
+        return sprintf('%1$s %2$s', esc_html( $item['email'] ), $this->row_actions($actions) );
+    }
+
     public function column_default( $item, $column_name ) {
         switch ( $column_name ) {
-            case 'email':
-                return esc_html( $item['email'] );
             case 'status':
                 if ( $item['status'] === 'sent' ) {
                     return '<span style="background:#c6e1c6; color:#5b841b; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:11px;">MAIL SENT</span>';
@@ -50,9 +57,10 @@ class WC_Notify_Subscribers_List_Table extends WP_List_Table {
                     $stock_status = $product->is_in_stock() ? '<span style="color:green;">В наличии</span>' : '<span style="color:#d63638;">Нет в наличии</span>';
                     $qty = $product->get_stock_quantity();
                     $qty_text = $qty !== null ? $qty : 'N/A';
+                    $edit_link = admin_url( 'post.php?post=' . ( $item['variation_id'] ? $item['product_id'] : $product->get_id() ) . '&action=edit' );
                     return sprintf(
                         '<strong><a href="%s">%s</a></strong><br><small>Статус: %s<br>Остаток: %s</small>',
-                        esc_url( get_edit_post_link( $product->get_id() ) ),
+                        esc_url( $edit_link ),
                         esc_html( $product->get_name() ),
                         $stock_status,
                         $qty_text
@@ -97,6 +105,11 @@ class WC_Notify_Subscribers_List_Table extends WP_List_Table {
         $table_name = $wpdb->prefix . 'wc_stock_notifications';
 
         $this->process_bulk_action();
+
+        $columns = $this->get_columns();
+        $hidden = array();
+        $sortable = $this->get_sortable_columns();
+        $this->_column_headers = array( $columns, $hidden, $sortable );
 
         $per_page = 20;
         $current_page = $this->get_pagenum();

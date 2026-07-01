@@ -37,35 +37,23 @@ class WC_Notify_Mailer {
             $target_product = $sub->variation_id ? wc_get_product( $sub->variation_id ) : $product;
             if ( ! $target_product ) continue;
 
-            $subject = sprintf( 'Товар "%s" снова в наличии!', $target_product->get_name() );
-            
-            // Формируем аккуратное тело письма
-            $message  = '<p>Здравствуйте!</p>';
-            $message .= sprintf( '<p>Товар <strong>%s</strong>, которым вы интересовались, снова доступен для заказа.</p>', $target_product->get_name() );
-            $message .= sprintf( '<p><a href="%s" style="display:inline-block; padding:10px 20px; background:#000; color:#fff; text-decoration:none;">Перейти к товару</a></p>', $target_product->get_permalink() );
-
-            // Оборачиваем в стандартный шаблон WC
-            $email_content = $mailer->wrap_message( $subject, $message );
-            
-            // Заголовки для предотвращения попадания в спам
-            $headers = array( 'Content-Type: text/html; charset=UTF-8' );
-            
-            // Отправляем письмо
-            $mail_sent = wc_mail( $sub->email, $subject, $email_content, $headers );
-
-            // Обновляем статус только если письмо отправлено
-            if ( $mail_sent ) {
-                $wpdb->update(
-                    $table_name,
-                    [ 'status' => 'sent' ],
-                    [ 'id' => $sub->id ],
-                    [ '%s' ],
-                    [ '%d' ]
-                );
-            } else {
-                // Логируем ошибку
-                error_log( "WC Notify: Failed to send email to {$sub->email} for product {$product_id}" );
+            // Trigger the custom WooCommerce email
+            if ( function_exists( 'WC' ) ) {
+                $mailer = WC()->mailer();
+                $emails = $mailer->get_emails();
+                if ( isset( $emails['WC_Notify_Email_Instock'] ) ) {
+                    $emails['WC_Notify_Email_Instock']->trigger( $sub->id );
+                }
             }
+
+            // Обновляем статус 
+            $wpdb->update(
+                $table_name,
+                [ 'status' => 'sent', 'sent_at' => current_time( 'mysql' ) ],
+                [ 'id' => $sub->id ],
+                [ '%s', '%s' ],
+                [ '%d' ]
+            );
         }
 
         // Проверяем, остались ли еще подписчики для этого товара

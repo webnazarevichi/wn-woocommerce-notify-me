@@ -40,6 +40,7 @@ function wc_notify_install_db() {
         user_id bigint(20) DEFAULT 0 NOT NULL,
         email varchar(100) NOT NULL,
         created_at datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        sent_at datetime DEFAULT NULL,
         status varchar(20) DEFAULT 'pending' NOT NULL,
         PRIMARY KEY  (id),
         KEY product_id (product_id),
@@ -48,6 +49,39 @@ function wc_notify_install_db() {
 
     require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
     dbDelta( $sql );
+
+    if ( ! wp_next_scheduled( 'wc_notify_cleanup_event' ) ) {
+        wp_schedule_event( time(), 'daily', 'wc_notify_cleanup_event' );
+    }
+}
+
+register_deactivation_hook( __FILE__, 'wc_notify_deactivate' );
+function wc_notify_deactivate() {
+    wp_clear_scheduled_hook( 'wc_notify_cleanup_event' );
+}
+
+add_action( 'wc_notify_cleanup_event', 'wc_notify_do_cleanup' );
+function wc_notify_do_cleanup() {
+    $days = (int) get_option( 'wc_notify_delete_days', '0' );
+    if ( $days > 0 ) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'wc_stock_notifications';
+        
+        $wpdb->query( $wpdb->prepare(
+            "DELETE FROM $table_name WHERE status = 'sent' AND sent_at IS NOT NULL AND sent_at < DATE_SUB(NOW(), INTERVAL %d DAY)",
+            $days
+        ) );
+    }
+}
+
+// Подключаем классы писем
+add_filter( 'woocommerce_email_classes', 'wc_notify_add_emails' );
+function wc_notify_add_emails( $email_classes ) {
+    require_once WC_NOTIFY_PLUGIN_DIR . 'includes/emails/class-wc-notify-email-subscribed.php';
+    require_once WC_NOTIFY_PLUGIN_DIR . 'includes/emails/class-wc-notify-email-instock.php';
+    $email_classes['WC_Notify_Email_Subscribed'] = new WC_Notify_Email_Subscribed();
+    $email_classes['WC_Notify_Email_Instock'] = new WC_Notify_Email_Instock();
+    return $email_classes;
 }
 
 // Подключаем основные классы

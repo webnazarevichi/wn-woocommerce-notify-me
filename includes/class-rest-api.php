@@ -69,6 +69,16 @@ class WC_Notify_REST_API {
             'email'        => $email,
             'status'       => 'pending'
         ] );
+        $sub_id = $wpdb->insert_id;
+
+        // 7. Отправка письма о подписке
+        if ( function_exists( 'WC' ) ) {
+            $mailer = WC()->mailer();
+            $emails = $mailer->get_emails();
+            if ( isset( $emails['WC_Notify_Email_Subscribed'] ) ) {
+                $emails['WC_Notify_Email_Subscribed']->trigger( $sub_id );
+            }
+        }
 
         return rest_ensure_response( [ 'success' => true, 'message' => 'Спасибо! Мы уведомим вас, когда товар появится в наличии.' ] );
     }
