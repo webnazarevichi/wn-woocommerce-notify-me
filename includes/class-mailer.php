@@ -41,16 +41,21 @@ class WC_Notify_Mailer {
             $email_content = $mailer->wrap_message( $subject, $message );
             
             // Отправляем письмо
-            wc_mail( $sub->email, $subject, $email_content );
+            $mail_sent = wc_mail( $sub->email, $subject, $email_content );
 
-            // Обновляем статус на sent
-            $wpdb->update( 
-                $table_name, 
-                [ 'status' => 'sent' ], 
-                [ 'id' => $sub->id ], 
-                [ '%s' ], 
-                [ '%d' ] 
-            );
+            // Обновляем статус только если письмо отправлено
+            if ( $mail_sent ) {
+                $wpdb->update(
+                    $table_name,
+                    [ 'status' => 'sent' ],
+                    [ 'id' => $sub->id ],
+                    [ '%s' ],
+                    [ '%d' ]
+                );
+            } else {
+                // Логируем ошибку
+                error_log( "WC Notify: Failed to send email to {$sub->email} for product {$product_id}" );
+            }
         }
 
         // Проверяем, остались ли еще подписчики для этого товара

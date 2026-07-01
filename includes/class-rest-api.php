@@ -30,7 +30,7 @@ class WC_Notify_REST_API {
         }
 
         // 3. Rate Limiting (Защита от перебора по IP)
-        $ip = $_SERVER['REMOTE_ADDR'];
+        $ip = sanitize_text_field( $_SERVER['REMOTE_ADDR'] );
         $transient_key = 'wc_notify_limit_' . md5( $ip );
         $requests = get_transient( $transient_key ) ?: 0;
         

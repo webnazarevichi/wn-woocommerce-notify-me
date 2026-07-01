@@ -11,6 +11,17 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+// Проверка на установленный WooCommerce
+add_action( 'plugins_loaded', 'wc_notify_check_dependencies' );
+function wc_notify_check_dependencies() {
+    if ( ! class_exists( 'WooCommerce' ) ) {
+        add_action( 'admin_notices', function() {
+            echo '<div class="error"><p>Плагин "WooCommerce Notify Me" требует WooCommerce для работы!</p></div>';
+        } );
+        return;
+    }
+}
+
 define( 'WC_NOTIFY_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WC_NOTIFY_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
@@ -43,3 +54,6 @@ function wc_notify_install_db() {
 require_once WC_NOTIFY_PLUGIN_DIR . 'includes/class-rest-api.php';
 require_once WC_NOTIFY_PLUGIN_DIR . 'includes/class-frontend.php';
 require_once WC_NOTIFY_PLUGIN_DIR . 'includes/class-stock-trigger.php';
+require_once WC_NOTIFY_PLUGIN_DIR . 'includes/class-mailer.php';
+require_once WC_NOTIFY_PLUGIN_DIR . 'includes/class-admin.php';
+require_once WC_NOTIFY_PLUGIN_DIR . 'includes/class-my-account.php';
