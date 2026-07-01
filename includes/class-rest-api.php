@@ -53,8 +53,8 @@ class WC_Notify_REST_API {
 
         // 5. Проверка на дубликат (чтобы не спамить в БД)
         $exists = $wpdb->get_var( $wpdb->prepare(
-            "SELECT id FROM $table_name WHERE email = %s AND product_id = %d AND status = 'pending'",
-            $email, $product_id
+            "SELECT id FROM $table_name WHERE email = %s AND product_id = %d AND variation_id = %d AND status = 'pending'",
+            $email, $product_id, $variation_id
         ) );
 
         if ( $exists ) {

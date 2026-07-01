@@ -14,7 +14,9 @@ class WC_Notify_Frontend {
         if ( ! $product || $product->is_in_stock() ) return;
 
         // Кнопка, открывающая попап
-        echo '<button type="button" id="wc-notify-btn" class="btn button product-notify-btn open-notify-form" data-product-id="' . esc_attr( $product->get_id() ) . '">Notify Me When Available</button>';
+        // Использовать сохраненное значение опции с дефолтным фолбеком
+        $btn_text = get_option( 'wc_notify_btn_text', 'Notify Me When Available' );
+        echo '<button type="button" id="wc-notify-btn" class="btn button product-notify-btn open-notify-form" data-product-id="' . esc_attr( $product->get_id() ) . '">' . esc_html( $btn_text ) . '</button>';
     }
 
     public static function render_popup_html() {

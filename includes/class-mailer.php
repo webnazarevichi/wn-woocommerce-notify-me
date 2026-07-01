@@ -8,16 +8,23 @@ class WC_Notify_Mailer {
         add_action( 'wc_notify_send_emails', [ __CLASS__, 'process_batch' ] );
     }
 
-    public static function process_batch( $product_id ) {
+    public static function process_batch( $product_id, $variation_id = 0 ) {
         global $wpdb;
         $table_name = $wpdb->prefix . 'wc_stock_notifications';
         $batch_size = 50; // Отправляем по 50 писем за один проход
 
         // Получаем партию подписчиков
-        $subscribers = $wpdb->get_results( $wpdb->prepare(
-            "SELECT id, email, variation_id FROM $table_name WHERE product_id = %d AND status = 'pending' LIMIT %d",
-            $product_id, $batch_size
-        ) );
+        if ( $variation_id ) {
+            $subscribers = $wpdb->get_results( $wpdb->prepare(
+                "SELECT id, email, variation_id FROM $table_name WHERE product_id = %d AND variation_id = %d AND status = 'pending' LIMIT %d",
+                $product_id, $variation_id, $batch_size
+            ) );
+        } else {
+            $subscribers = $wpdb->get_results( $wpdb->prepare(
+                "SELECT id, email, variation_id FROM $table_name WHERE product_id = %d AND status = 'pending' LIMIT %d",
+                $product_id, $batch_size
+            ) );
+        }
 
         if ( empty( $subscribers ) ) return;
 
