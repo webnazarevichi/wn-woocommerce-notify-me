@@ -47,8 +47,11 @@ class WC_Notify_Mailer {
             // Оборачиваем в стандартный шаблон WC
             $email_content = $mailer->wrap_message( $subject, $message );
             
+            // Заголовки для предотвращения попадания в спам
+            $headers = array( 'Content-Type: text/html; charset=UTF-8' );
+            
             // Отправляем письмо
-            $mail_sent = wc_mail( $sub->email, $subject, $email_content );
+            $mail_sent = wc_mail( $sub->email, $subject, $email_content, $headers );
 
             // Обновляем статус только если письмо отправлено
             if ( $mail_sent ) {
